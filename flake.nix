@@ -33,6 +33,7 @@
       haskellMod = import ./nix/haskell.nix { inherit inputs lib; };
       elmMod     = import ./nix/elm.nix     { inherit inputs lib; };
       gleamMod   = import ./nix/gleam.nix   { inherit inputs lib; };
+      latexMod   = import ./nix/latex.nix   { inherit inputs lib; };
 
       # Inietta `self` nelle mkShell che ne hanno bisogno (agda, haskell).
       # I consumatori chiamano piforge.lib.<lang>.mkShell senza preoccuparsi
@@ -61,6 +62,7 @@
           haskell  = mkHaskellShell { inherit pkgs; };
           elm      = elmMod.mkShell    { inherit pkgs; };
           gleam    = gleamMod.mkShell  { inherit pkgs; };
+          latex    = latexMod.mkShell  { inherit pkgs; };
           default  = mkAgdaShell    { inherit pkgs; version = "v28"; };
         });
 
@@ -90,6 +92,10 @@
         };
         elm   = { mkShell = elmMod.mkShell; };
         gleam = { mkShell = gleamMod.mkShell; };
+        latex = {
+          mkShell     = latexMod.mkShell;
+          packagesFor = latexMod.packagesFor;
+        };
       };
     };
 }

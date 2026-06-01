@@ -45,7 +45,7 @@ let
       hp   = pkgs.haskell.packages.${ghc};
     in
     hlib.dontCheck (hlib.dontHaddock (hlib.disableLibraryProfiling
-      (hp.developPackage { inherit src; name = "Agda-${version}"; })));
+      (hp.developPackage { root = src; name = "Agda-${version}"; })));
 
   buildStdlib = { pkgs, src, version }:
     pkgs.stdenv.mkDerivation {
@@ -107,19 +107,27 @@ in
   # ── lib.agda.mkShell ────────────────────────────────────────────────────
   # `self` è il flake piforge: viene iniettato da flake.nix, non esposto
   # direttamente ai consumatori (che chiamano piforge.lib.agda.mkShell).
-  mkShell = { self, pkgs, version, extraPackages ? [] }:
+  #
+  # useRuntimeLibraries = true: agda non riceve --library-file; usa
+  # $AGDA_DIR/libraries risolto a runtime. Necessario per librerie mutabili
+  # come IAL dove i sorgenti vengono copiati in una directory scrivibile.
+  mkShell = { self, pkgs, version, extraPackages ? [], shellHook ? "", useRuntimeLibraries ? false }:
     let
       suffix = lib.removePrefix "v" version;
       v      = versionTable.${version};
+
+      agdaBin =
+        if useRuntimeLibraries
+        then buildAgda { inherit pkgs; src = v.agdaSrc; version = v.agdaVersion; inherit (v) ghc; }
+        else self.packages.${pkgs.system}."agda-${suffix}";
+
+      cornelis = self.packages.${pkgs.system}."cornelis-${suffix}";
     in
     pkgs.mkShell {
       name     = "agda-${v.agdaVersion}";
-      packages = [
-        self.packages.${pkgs.system}."agda-${suffix}"
-        self.packages.${pkgs.system}."cornelis-${suffix}"
-      ] ++ extraPackages;
+      packages = [ agdaBin cornelis ] ++ extraPackages;
       shellHook = ''
-        echo "agda ${v.agdaVersion} | stdlib ${v.stdlibVersion} | cornelis $(which cornelis)"
-      '';
+        echo "agda ${v.agdaVersion}${lib.optionalString (!useRuntimeLibraries) " | stdlib ${v.stdlibVersion}"} | cornelis $(which cornelis)"
+      '' + shellHook;
     };
 }
