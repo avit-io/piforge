@@ -1,0 +1,32 @@
+# Nix
+result
+result-*
+.direnv/
+
+# Agda
+*.agdai
+_build/
+MAlonzo/
+
+# Haskell
+dist/
+dist-newstyle/
+.stack-work/
+*.o
+*.hi
+*.hie
+*.dyn_o
+*.dyn_hi
+cabal.project.local
+
+# Elm
+elm-stuff/
+
+# Gleam
+build/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
